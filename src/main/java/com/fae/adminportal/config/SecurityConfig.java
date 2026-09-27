@@ -55,6 +55,7 @@ public class SecurityConfig {
                 .requestMatchers("/api/v1/auth/**").permitAll()
 
                 .requestMatchers(HttpMethod.GET, "/uploads/**").permitAll()
+                .requestMatchers(HttpMethod.POST, "/api/contact-us").permitAll()
 
                 // Any other request must be authenticated
                 .anyRequest().authenticated()

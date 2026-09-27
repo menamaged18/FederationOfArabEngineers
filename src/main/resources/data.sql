@@ -30,3 +30,10 @@ VALUES
         NOW()
     )
 ON DUPLICATE KEY UPDATE email = VALUES(email);
+
+INSERT INTO content_types (name, slug) VALUES
+  ('News',              'news'),
+  ('Activity Meeting',  'activity_meeting'),
+  ('Committee',         'committee'),
+  ('Specialized Body',  'specialized_body')
+ON DUPLICATE KEY UPDATE name = VALUES(name);

@@ -6,13 +6,18 @@ import com.fae.adminportal.common.exception.ResourceNotFoundException;
 import com.fae.adminportal.domain.user.dto.CreateRoleRequest;
 import com.fae.adminportal.domain.user.dto.RoleResponse;
 import com.fae.adminportal.domain.user.dto.UpdateRoleRequest;
+import com.fae.adminportal.domain.user.dto.RoleSummary;
 import com.fae.adminportal.domain.user.entity.Role;
 import com.fae.adminportal.domain.user.repository.RoleRepository;
 import com.fae.adminportal.domain.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+
+import java.util.List;
+
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.data.domain.Sort;
 
 @Service
 @RequiredArgsConstructor
@@ -82,6 +87,13 @@ public class RoleService {
     }
 
     // ---- helpers ----
+
+    public List<RoleSummary> listAll() {
+        return roleRepository.findAll(Sort.by(Sort.Direction.ASC, "name"))
+                .stream()
+                .map(r -> new RoleSummary(r.getId(), r.getName(), r.getSlug()))
+                .toList();
+    }
 
     Role findOrThrow(Integer id) {
         return roleRepository.findById(id)

@@ -2,6 +2,7 @@ package com.fae.adminportal.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
@@ -26,48 +27,105 @@ import java.util.List;
 public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    private final AdminAuthFailureHandler adminAuthFailureHandler;
 
-    public SecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter) {
+    public SecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter,
+                          AdminAuthFailureHandler adminAuthFailureHandler) {
         this.jwtAuthenticationFilter = jwtAuthenticationFilter;
+        this.adminAuthFailureHandler = adminAuthFailureHandler;
     }
 
+    // -------------------------------------------------------------
+    // 1. REST API chain — stateless JWT
+    // -------------------------------------------------------------
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    @Order(1)
+    public SecurityFilterChain apiSecurityFilterChain(HttpSecurity http) throws Exception {
         http
-            // 1. Disable CSRF (not needed for stateless REST APIs using JWT)
+            .securityMatcher(
+                "/api/**",
+                "/v3/api-docs/**",
+                "/swagger-ui/**",
+                "/swagger-ui.html",
+                "/swagger-resources/**",
+                "/uploads/**"
+            )
             .csrf(AbstractHttpConfigurer::disable)
-
-            // 2. Enable and configure CORS
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-
-            // 3. Configure URL authorization rules
             .authorizeHttpRequests(auth -> auth
-                // Public Swagger UI & OpenAPI docs endpoints
                 .requestMatchers(
                     "/v3/api-docs/**",
                     "/swagger-ui/**",
                     "/swagger-ui.html",
-                    "/webjars/**",          // <-- Add this
-                    "/swagger-resources/**" // <-- Add this
+                    "/swagger-resources/**"
                 ).permitAll()
 
-                // Public Auth endpoints (login, register, refresh-token)
                 .requestMatchers("/api/v1/auth/**").permitAll()
 
                 .requestMatchers(HttpMethod.GET, "/uploads/**").permitAll()
-                .requestMatchers(HttpMethod.POST, "/api/contact-us").permitAll()
+                .requestMatchers(HttpMethod.POST, "/api/v1/contacts").permitAll()
 
-                // Any other request must be authenticated
+                .anyRequest().authenticated()
+            )
+            .sessionManagement(session -> session
+                .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+            .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+
+        return http.build();
+    }
+
+    // -------------------------------------------------------------
+    // 2. Admin MVC chain — form login + session cookie
+    // -------------------------------------------------------------
+    @Bean
+    @Order(2)
+    public SecurityFilterChain webSecurityFilterChain(HttpSecurity http) throws Exception {
+        http
+            // Only admin routes + the static assets they load.
+            .securityMatcher(
+                "/admin/**",
+                "/webjars/**"
+            )
+
+            .authorizeHttpRequests(auth -> auth
+                // Public: login page + its assets + webjars
+                .requestMatchers(
+                    "/admin/login",
+                    "/admin/css/**",
+                    "/admin/js/**",
+                    "/admin/images/**",
+                    "/webjars/**"
+                ).permitAll()
+
+                // Custom error views are reachable by anyone (otherwise the
+                // user can't see WHY they were blocked).
+                .requestMatchers("/admin/error/**").permitAll()
+
+                // Everything else under /admin requires super_admin.
+                .requestMatchers("/admin/**").hasAuthority("ROLE_super_admin")
+
                 .anyRequest().authenticated()
             )
 
-            // 4. Configure Stateless Session Management (No HTTP sessions created by Spring)
-            .sessionManagement(session -> session
-                .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+            .formLogin(form -> form
+                .loginPage("/admin/login")
+                .loginProcessingUrl("/admin/login")
+                .defaultSuccessUrl("/admin/dashboard", true)
+                .failureHandler(adminAuthFailureHandler)   // handles ?error vs ?deactivated
+                .permitAll()
             )
 
-            // 5. Add custom JWT Filter before standard Spring Security Auth filter
-            .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+            .logout(logout -> logout
+                .logoutUrl("/admin/logout")
+                .logoutSuccessUrl("/admin/login?logout")
+                .invalidateHttpSession(true)
+                .deleteCookies("JSESSIONID")
+                .permitAll()
+            )
+
+            .exceptionHandling(ex -> ex
+                .accessDeniedPage("/admin/error/403")
+            );
 
         return http.build();
     }
@@ -78,16 +136,14 @@ public class SecurityConfig {
     }
 
     @Bean
-    public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration) throws Exception {
-        return authenticationConfiguration.getAuthenticationManager();
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration cfg) throws Exception {
+        return cfg.getAuthenticationManager();
     }
 
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        
-        // Allowed origins (Update or add front-end URLs like "http://localhost:3000")
-        configuration.setAllowedOriginPatterns(List.of("*")); 
+        configuration.setAllowedOriginPatterns(List.of("*"));
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("Authorization", "Content-Type", "X-Requested-With"));
         configuration.setExposedHeaders(List.of("Authorization"));

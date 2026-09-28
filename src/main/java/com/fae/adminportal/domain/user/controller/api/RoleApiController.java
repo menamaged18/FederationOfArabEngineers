@@ -1,4 +1,4 @@
-package com.fae.adminportal.domain.user.controller;
+package com.fae.adminportal.domain.user.controller.api;
 
 import com.fae.adminportal.common.dto.ApiResponse;
 import com.fae.adminportal.common.dto.PagedResponse;
@@ -16,15 +16,21 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+/**
+ * REST API endpoints for role management.
+ * Base path: /api/v1/roles
+ * <p>
+ * Authenticated via JWT (see {@code JwtAuthenticationFilter}).
+ */
 @RestController
-@RequestMapping("/api/roles")
+@RequestMapping("/api/v1/roles")
 @RequiredArgsConstructor
-public class RoleController {
+@PreAuthorize("hasAuthority('ROLE_super_admin')")
+public class RoleApiController {
 
     private final RoleService roleService;
 
     @PostMapping
-    @PreAuthorize("hasAuthority('ROLE_super_admin')")
     public ResponseEntity<ApiResponse<RoleResponse>> create(
             @Valid @RequestBody CreateRoleRequest request) {
         RoleResponse created = roleService.create(request);
@@ -33,7 +39,6 @@ public class RoleController {
     }
 
     @GetMapping
-    @PreAuthorize("hasAuthority('ROLE_super_admin')")
     public ApiResponse<PagedResponse<RoleResponse>> list(
             @PageableDefault(size = 20, sort = "name", direction = Sort.Direction.ASC)
             Pageable pageable) {
@@ -41,13 +46,11 @@ public class RoleController {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasAuthority('ROLE_super_admin')")
     public ApiResponse<RoleResponse> getById(@PathVariable Integer id) {
         return ApiResponse.ok(roleService.getById(id));
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAuthority('ROLE_super_admin')")
     public ApiResponse<RoleResponse> update(
             @PathVariable Integer id,
             @Valid @RequestBody UpdateRoleRequest request) {
@@ -55,7 +58,6 @@ public class RoleController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAuthority('ROLE_super_admin')")
     public ApiResponse<Void> delete(@PathVariable Integer id) {
         roleService.delete(id);
         return ApiResponse.ok("Role deleted", null);

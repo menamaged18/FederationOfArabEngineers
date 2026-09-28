@@ -1,4 +1,4 @@
-package com.fae.adminportal.domain.user.controller;
+package com.fae.adminportal.domain.user.controller.api;
 
 import com.fae.adminportal.common.dto.ApiResponse;
 import com.fae.adminportal.common.dto.PagedResponse;
@@ -16,10 +16,17 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+/**
+ * REST API endpoints for user management.
+ * Base path: /api/v1/users
+ * <p>
+ * Consumed by external clients (SPA, mobile, integrations).
+ * Authenticated via JWT (see {@code JwtAuthenticationFilter}).
+ */
 @RestController
-@RequestMapping("/api/users")
+@RequestMapping("/api/v1/users")
 @RequiredArgsConstructor
-public class UserController {
+public class UserApiController {
 
     private final UserService userService;
 

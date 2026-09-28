@@ -168,6 +168,14 @@ public class ContentService {
         return userRepository.findByEmail(auth.getName()).orElse(null);
     }
 
+    @Transactional
+    public ContentResponse setPublished(Long id, boolean published) {
+        Content c = contentRepository.findById(id)
+                .orElseThrow(() -> ResourceNotFoundException.of("Content", id));
+        c.setIsPublished(published);
+        return toResponse(c);
+    }
+
     private ContentResponse toResponse(Content c) {
         List<ContentResponse.FileSummary> files = c.getFiles() == null
                 ? Collections.emptyList()

@@ -1,4 +1,4 @@
-package com.fae.adminportal.domain.content.controller;
+package com.fae.adminportal.domain.content.controller.api;
 
 import com.fae.adminportal.common.dto.ApiResponse;
 import com.fae.adminportal.common.dto.PagedResponse;
@@ -14,13 +14,24 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+/**
+ * REST API endpoints for content.
+ * Base path: /api/v1/contents
+ * <p>
+ * Reads are public (news/meetings/committees are shown on the public site).
+ * Writes require {@code ROLE_super_admin}.
+ */
 @RestController
-@RequestMapping("/api/contents")
+@RequestMapping("/api/v1/contents")
 @RequiredArgsConstructor
 @Tag(name = "Contents", description = "Manage news, meetings, committees, specialized bodies")
-public class ContentController {
+public class ContentApiController {
 
     private final ContentService contentService;
+
+    /* ------------------------------------------------------------------ */
+    /*  Public reads                                                       */
+    /* ------------------------------------------------------------------ */
 
     @GetMapping
     public ApiResponse<PagedResponse<ContentResponse>> list(
@@ -44,21 +55,25 @@ public class ContentController {
         return ApiResponse.ok(contentService.findBySlug(slug));
     }
 
+    /* ------------------------------------------------------------------ */
+    /*  Writes — super_admin only                                          */
+    /* ------------------------------------------------------------------ */
+
     @PostMapping
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN')")
+    @PreAuthorize("hasAuthority('ROLE_super_admin')")
     public ApiResponse<ContentResponse> create(@Valid @RequestBody ContentCreateRequest request) {
         return ApiResponse.ok("Content created", contentService.create(request));
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN')")
+    @PreAuthorize("hasAuthority('ROLE_super_admin')")
     public ApiResponse<ContentResponse> update(@PathVariable Long id,
                                                @Valid @RequestBody ContentUpdateRequest request) {
         return ApiResponse.ok("Content updated", contentService.update(id, request));
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN')")
+    @PreAuthorize("hasAuthority('ROLE_super_admin')")
     public ApiResponse<Void> delete(@PathVariable Long id) {
         contentService.delete(id);
         return ApiResponse.ok("Content deleted", null);

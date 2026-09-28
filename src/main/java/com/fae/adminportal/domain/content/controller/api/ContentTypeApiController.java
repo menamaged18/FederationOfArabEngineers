@@ -1,4 +1,4 @@
-package com.fae.adminportal.domain.content.controller;
+package com.fae.adminportal.domain.content.controller.api;
 
 import com.fae.adminportal.common.dto.ApiResponse;
 import com.fae.adminportal.domain.content.dto.ContentTypeRequest;
@@ -12,11 +12,15 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+/**
+ * REST API endpoints for content types.
+ * Base path: /api/v1/content-types
+ */
 @RestController
-@RequestMapping("/api/content-types")
+@RequestMapping("/api/v1/content-types")
 @RequiredArgsConstructor
 @Tag(name = "Content Types", description = "Manage dynamic content types")
-public class ContentTypeController {
+public class ContentTypeApiController {
 
     private final ContentTypeService contentTypeService;
 
@@ -36,20 +40,20 @@ public class ContentTypeController {
     }
 
     @PostMapping
-    @PreAuthorize("hasRole('SUPER_ADMIN')")
+    @PreAuthorize("hasAuthority('ROLE_super_admin')")
     public ApiResponse<ContentTypeResponse> create(@Valid @RequestBody ContentTypeRequest request) {
         return ApiResponse.ok("Content type created", contentTypeService.create(request));
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('SUPER_ADMIN')")
+    @PreAuthorize("hasAuthority('ROLE_super_admin')")
     public ApiResponse<ContentTypeResponse> update(@PathVariable Integer id,
                                                    @Valid @RequestBody ContentTypeRequest request) {
         return ApiResponse.ok("Content type updated", contentTypeService.update(id, request));
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('SUPER_ADMIN')")
+    @PreAuthorize("hasAuthority('ROLE_super_admin')")
     public ApiResponse<Void> delete(@PathVariable Integer id) {
         contentTypeService.delete(id);
         return ApiResponse.ok("Content type deleted", null);

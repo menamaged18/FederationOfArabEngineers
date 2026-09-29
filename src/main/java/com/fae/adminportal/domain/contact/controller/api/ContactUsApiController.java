@@ -1,4 +1,4 @@
-package com.fae.adminportal.domain.contact.controller;
+package com.fae.adminportal.domain.contact.controller.api;
 
 import com.fae.adminportal.common.dto.ApiResponse;
 import com.fae.adminportal.common.dto.PagedResponse;
@@ -17,11 +17,18 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
 
+/**
+ * REST API endpoints for Contact Us inquiries.
+ * Base path: /api/v1/contacts
+ * <p>
+ * POST is public (see {@code SecurityConfig} whitelist).
+ * All other endpoints require {@code ROLE_super_admin}.
+ */
 @RestController
-@RequestMapping("/api/contact-us")
+@RequestMapping("/api/v1/contacts")
 @RequiredArgsConstructor
 @Tag(name = "Contact Us", description = "Public inquiries and admin review workflow")
-public class ContactUsController {
+public class ContactUsApiController {
 
     private final ContactUsService contactUsService;
 
@@ -29,14 +36,15 @@ public class ContactUsController {
 
     @PostMapping
     public ApiResponse<ContactUsResponse> submit(@Valid @RequestBody ContactUsRequest request) {
-        return ApiResponse.ok("Message received. We will get back to you soon.",
+        return ApiResponse.ok(
+                "Message received. We will get back to you soon.",
                 contactUsService.submit(request));
     }
 
     /* ---------- Admin ---------- */
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN')")
+    @PreAuthorize("hasAuthority('ROLE_super_admin')")
     public ApiResponse<PagedResponse<ContactUsResponse>> list(
             @RequestParam(required = false) ContactUs.Status status,
             @RequestParam(required = false) String search,
@@ -45,26 +53,26 @@ public class ContactUsController {
     }
 
     @GetMapping("/stats")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN')")
+    @PreAuthorize("hasAuthority('ROLE_super_admin')")
     public ApiResponse<Map<String, Long>> stats() {
         return ApiResponse.ok(contactUsService.countByStatus());
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN')")
+    @PreAuthorize("hasAuthority('ROLE_super_admin')")
     public ApiResponse<ContactUsResponse> getById(@PathVariable Long id) {
         return ApiResponse.ok(contactUsService.findById(id));
     }
 
     @PatchMapping("/{id}/review")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN')")
+    @PreAuthorize("hasAuthority('ROLE_super_admin')")
     public ApiResponse<ContactUsResponse> review(@PathVariable Long id,
                                                  @Valid @RequestBody ReviewContactRequest request) {
         return ApiResponse.ok("Message reviewed", contactUsService.review(id, request));
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('SUPER_ADMIN')")
+    @PreAuthorize("hasAuthority('ROLE_super_admin')")
     public ApiResponse<Void> delete(@PathVariable Long id) {
         contactUsService.delete(id);
         return ApiResponse.ok("Message deleted", null);

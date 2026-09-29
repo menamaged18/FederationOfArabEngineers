@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login - FAE Admin Portal</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" th:href="@{/admin/css/admin.css}">
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen p-4">
+
+  <div class="max-w-md w-full bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
+    
+    <!-- Header / Brand Section -->
+    <div class="bg-[#005E3C] p-8 text-center text-white relative">
+      <div class="w-14 h-14 bg-white text-[#005E3C] rounded-2xl flex items-center justify-center mx-auto mb-3 font-extrabold text-2xl shadow-md">
+        FAE
+      </div>
+      <h2 class="text-2xl font-bold tracking-wide">Welcome Back</h2>
+      <p class="text-emerald-100 text-sm mt-1">Sign in to access the Admin Portal</p>
+    </div>
+
+    <!-- Login Form Section -->
+    <div class="p-8">
+
+      <!-- Alert: Success Message (e.g. after logout) -->
+      <div th:if="${successMessage}" class="mb-6 p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-[#2F9657] text-sm flex items-center gap-3">
+        <svg class="w-5 h-5 flex-shrink-0 text-[#2F9657]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+        </svg>
+        <span th:text="${successMessage}">You have been signed out.</span>
+      </div>
+
+      <!-- Alert: Error Message (e.g. invalid credentials or deactivated account) -->
+      <div th:if="${errorMessage}" class="mb-6 p-4 rounded-xl bg-red-50 border border-red-200 text-red-700 text-sm flex items-center gap-3">
+        <svg class="w-5 h-5 flex-shrink-0 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+        </svg>
+        <span th:text="${errorMessage}">Invalid email or password.</span>
+      </div>
+
+      <!-- Spring Security Form Login Target -->
+      <form th:action="@{/admin/login}" method="post" class="space-y-5">
+        
+        <!-- CSRF Token -->
+        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+
+        <!-- Email Field -->
+        <div>
+          <label for="username" class="block text-sm font-semibold text-gray-700 mb-1.5">Email Address</label>
+          <div class="relative">
+            <span class="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none text-gray-400">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207"/>
+              </svg>
+            </span>
+            <input type="email" 
+                   id="username" 
+                   name="username" 
+                   required 
+                   autofocus
+                   placeholder="admin@fae.com"
+                   class="w-full pl-11 pr-4 py-3 text-sm bg-gray-50 border border-gray-300 rounded-xl focus:bg-white focus:outline-none focus:border-[#2F9657] focus:ring-2 focus:ring-[#2F9657]/20 transition-all text-gray-800" />
+          </div>
+        </div>
+
+        <!-- Password Field -->
+        <div>
+          <label for="password" class="block text-sm font-semibold text-gray-700 mb-1.5">Password</label>
+          <div class="relative">
+            <span class="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none text-gray-400">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m0 0v2m0-2h2m-2 0H10m8-6V7a4 4 0 00-8 0v4M5 9h14a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V11a2 2 0 012-2z"/>
+              </svg>
+            </span>
+            <input type="password" 
+                   id="password" 
+                   name="password" 
+                   required 
+                   placeholder="••••••••"
+                   class="w-full pl-11 pr-4 py-3 text-sm bg-gray-50 border border-gray-300 rounded-xl focus:bg-white focus:outline-none focus:border-[#2F9657] focus:ring-2 focus:ring-[#2F9657]/20 transition-all text-gray-800" />
+          </div>
+        </div>
+
+        <!-- Remember Me Option -->
+        <div class="flex items-center justify-between text-sm pt-1">
+          <label class="flex items-center gap-2 cursor-pointer text-gray-600 hover:text-gray-800">
+            <input type="checkbox" name="remember-me" class="w-4 h-4 rounded border-gray-300 text-[#005E3C] focus:ring-[#2F9657]" />
+            <span>Remember me</span>
+          </label>
+        </div>
+
+        <!-- Submit Button -->
+        <button type="submit" 
+                class="w-full py-3.5 px-4 bg-[#005E3C] hover:bg-[#2F9657] text-white font-semibold rounded-xl shadow-md hover:shadow-lg transition-all duration-200 flex items-center justify-center gap-2 mt-2">
+          <span>Sign In</span>
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
+          </svg>
+        </button>
+
+      </form>
+    </div>
+
+    <!-- Card Footer -->
+    <div class="bg-gray-50 px-8 py-4 border-t border-gray-100 text-center">
+      <p class="text-xs text-gray-500">
+        FAE Portal Security System &bull; Restricted Access
+      </p>
+    </div>
+
+  </div>
+
+</body>
+</html>

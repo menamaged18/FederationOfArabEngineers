@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contact Inquiries - Admin Portal</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #005E3C;
+            --secondary-color: #2F9657;
+        }
+        .btn-primary-custom {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+            color: #fff;
+        }
+        .btn-primary-custom:hover {
+            background-color: #00472d;
+            color: #fff;
+        }
+    </style>
+</head>
+<body class="bg-light">
+
+    <!-- Header -->
+    <div th:replace="~{admin/fragments/header :: header}"></div>
+
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Sidebar -->
+            <div class="col-md-3 col-lg-2 p-0">
+                <div th:replace="~{admin/fragments/sidebar :: sidebar}"></div>
+            </div>
+
+            <!-- Main Content -->
+            <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 py-4">
+                
+                <!-- Page Title -->
+                <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
+                    <h1 class="h2" style="color: var(--primary-color);">
+                        <i class="fa-solid fa-envelope-open-text me-2"></i>Contact Us Inquiries
+                    </h1>
+                </div>
+
+                <!-- Alert Messages -->
+                <div th:if="${successMessage}" class="alert alert-success alert-dismissible fade show" role="alert">
+                    <i class="fa-solid fa-circle-check me-2"></i><span th:text="${successMessage}"></span>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+                <div th:if="${errorMessage}" class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <i class="fa-solid fa-circle-exclamation me-2"></i><span th:text="${errorMessage}"></span>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+
+                <!-- Filters & Search Bar -->
+                <div class="card shadow-sm border-0 mb-4">
+                    <div class="card-body">
+                        <form th:action="@{/admin/contact-us}" method="get" class="row g-3 align-items-center">
+                            <div class="col-md-4">
+                                <div class="input-group">
+                                    <span class="input-group-text bg-white"><i class="fa-solid fa-magnifying-glass"></i></span>
+                                    <input type="text" name="search" th:value="${search}" class="form-control" placeholder="Search by name, email, or subject...">
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <select name="status" class="form-select">
+                                    <option value="">All Statuses</option>
+                                    <option th:each="st : ${statuses}" th:value="${st}" th:text="${st}" th:selected="${st == status}"></option>
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <button type="submit" class="btn btn-primary-custom w-100">Filter</button>
+                            </div>
+                            <div class="col-md-2" th:if="${search != null or status != null}">
+                                <a th:href="@{/admin/contact-us}" class="btn btn-outline-secondary w-100">Clear</a>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Inquiries Table -->
+                <div class="card shadow-sm border-0 mb-4">
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Sender</th>
+                                        <th>Subject</th>
+                                        <th>Status</th>
+                                        <th>Submitted At</th>
+                                        <th class="text-end">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr th:each="msg : ${messages.content}">
+                                        <td th:text="${msg.id}">1</td>
+                                        <td>
+                                            <strong th:text="${msg.fullName}">John Doe</strong><br>
+                                            <small class="text-muted" th:text="${msg.email}">john@example.com</small>
+                                        </td>
+                                        <td th:text="${msg.subject}">General Inquiry</td>
+                                        <td>
+                                            <span class="badge" 
+                                                  th:classappend="${msg.status.name() == 'NEW'} ? 'bg-danger' : (${msg.status.name() == 'IN_PROGRESS'} ? 'bg-warning text-dark' : 'bg-success')"
+                                                  th:text="${msg.status}">NEW</span>
+                                        </td>
+                                        <td th:text="${#temporals.format(msg.createdAt, 'yyyy-MM-dd HH:mm')}">2026-09-29 12:00</td>
+                                        <td class="text-end">
+                                            <a th:href="@{/admin/contact-us/{id}(id=${msg.id})}" class="btn btn-sm btn-outline-primary me-1" title="Review">
+                                                <i class="fa-solid fa-eye"></i>
+                                            </a>
+                                            <form th:action="@{/admin/contact-us/{id}/delete(id=${msg.id})}" method="post" class="d-inline"
+                                                  th:onsubmit="return confirm('Delete this contact inquiry?');">
+                                                <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete">
+                                                    <i class="fa-solid fa-trash"></i>
+                                                </button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                    <tr th:if="${#lists.isEmpty(messages.content)}">
+                                        <td colspan="6" class="text-center py-4 text-muted">
+                                            <i class="fa-solid fa-inbox fa-2x mb-2"></i>
+                                            <p class="mb-0">No inquiries found.</p>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Pagination -->
+                <nav th:if="${messages.totalPages > 1}" class="d-flex justify-content-center">
+                    <ul class="pagination">
+                        <li class="page-item" th:classappend="${messages.pageNumber == 0} ? 'disabled'">
+                            <a class="page-link" th:href="@{/admin/contact-us(page=${messages.pageNumber - 1}, status=${status}, search=${search})}">Previous</a>
+                        </li>
+                        <li class="page-item" th:each="i : ${#numbers.sequence(0, messages.totalPages - 1)}"
+                            th:classappend="${i == messages.pageNumber} ? 'active'">
+                            <a class="page-link" th:href="@{/admin/contact-us(page=${i}, status=${status}, search=${search})}" th:text="${i + 1}">1</a>
+                        </li>
+                        <li class="page-item" th:classappend="${messages.pageNumber + 1 == messages.totalPages} ? 'disabled'">
+                            <a class="page-link" th:href="@{/admin/contact-us(page=${messages.pageNumber + 1}, status=${status}, search=${search})}">Next</a>
+                        </li>
+                    </ul>
+                </nav>
+
+            </main>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <div th:replace="~{admin/fragments/footer :: footer}"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

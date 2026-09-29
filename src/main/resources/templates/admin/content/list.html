@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Content Management - FAE Admin Portal</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" th:href="@{/admin/css/admin.css}">
+</head>
+<body class="bg-gray-100 font-sans flex min-h-screen">
+
+  <!-- Sidebar Fragment -->
+  <div th:replace="~{admin/fragments/sidebar :: sidebar(${activeNav})}"></div>
+
+  <!-- Main Workspace -->
+  <div class="flex-1 flex flex-col min-w-0 overflow-x-hidden">
+    
+    <!-- Header Fragment -->
+    <div th:replace="~{admin/fragments/header :: header('Content Management')}"></div>
+
+    <!-- Main Content Area -->
+    <main class="p-8 flex-1">
+      
+      <!-- Action Bar & Filter Bar -->
+      <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-200 mb-6">
+        <form th:action="@{/admin/contents}" method="get" class="flex flex-col lg:flex-row items-center justify-between gap-4">
+          
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 w-full lg:w-auto flex-1">
+            <!-- Search Query -->
+            <div class="relative w-full">
+              <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-gray-400">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                </svg>
+              </span>
+              <input type="text" name="search" th:value="${search}" placeholder="Search title or text..."
+                     class="w-full pl-9 pr-3 py-2 text-sm bg-gray-50 border border-gray-300 rounded-xl focus:bg-white focus:outline-none focus:border-[#2F9657] focus:ring-2 focus:ring-[#2F9657]/20 transition-all"/>
+            </div>
+
+            <!-- Content Type Filter -->
+            <select name="contentTypeId" class="w-full px-3 py-2 text-sm bg-gray-50 border border-gray-300 rounded-xl focus:bg-white focus:outline-none focus:border-[#2F9657] focus:ring-2 focus:ring-[#2F9657]/20 transition-all">
+              <option value="">All Content Types</option>
+              <option th:each="type : ${contentTypes}" 
+                      th:value="${type.id}" 
+                      th:text="${type.name}" 
+                      th:selected="${type.id == contentTypeId}">News</option>
+            </select>
+
+            <!-- Status Filter -->
+            <select name="isPublished" class="w-full px-3 py-2 text-sm bg-gray-50 border border-gray-300 rounded-xl focus:bg-white focus:outline-none focus:border-[#2F9657] focus:ring-2 focus:ring-[#2F9657]/20 transition-all">
+              <option value="">All Statuses</option>
+              <option value="true" th:selected="${isPublished == true}">Published</option>
+              <option value="false" th:selected="${isPublished == false}">Draft / Unpublished</option>
+            </select>
+          </div>
+
+          <div class="flex items-center gap-2 w-full lg:w-auto justify-end">
+            <button type="submit" class="px-4 py-2 bg-gray-800 hover:bg-gray-900 text-white rounded-xl text-sm font-medium transition-colors">
+              Filter
+            </button>
+            <a th:href="@{/admin/contents}" class="px-3 py-2 text-gray-500 hover:text-gray-700 text-sm">Reset</a>
+            
+            <a th:href="@{/admin/contents/new}" class="inline-flex items-center gap-2 px-4 py-2 bg-[#005E3C] hover:bg-[#2F9657] text-white font-medium rounded-xl shadow-md transition-all text-sm ml-2">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+              </svg>
+              <span>Create Content</span>
+            </a>
+          </div>
+
+        </form>
+      </div>
+
+      <!-- Flash Messages -->
+      <div th:if="${successMessage}" class="mb-6 p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-[#2F9657] text-sm flex items-center justify-between shadow-sm">
+        <div class="flex items-center gap-3">
+          <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+          </svg>
+          <span th:text="${successMessage}">Operation successful.</span>
+        </div>
+      </div>
+
+      <div th:if="${errorMessage}" class="mb-6 p-4 rounded-xl bg-red-50 border border-red-200 text-red-700 text-sm flex items-center gap-3 shadow-sm">
+        <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+        </svg>
+        <span th:text="${errorMessage}">An error occurred.</span>
+      </div>
+
+      <!-- Table Container -->
+      <div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse">
+            <thead>
+              <tr class="bg-gray-50/80 border-b border-gray-200 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                <th class="py-4 px-6">Content</th>
+                <th class="py-4 px-6">Type</th>
+                <th class="py-4 px-6">Event Date</th>
+                <th class="py-4 px-6">Status</th>
+                <th class="py-4 px-6 text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100 text-sm">
+              <tr th:if="${#lists.isEmpty(contents.content)}" class="hover:bg-gray-50/50 transition-colors">
+                <td colspan="5" class="py-12 text-center text-gray-500">
+                  <div class="max-w-xs mx-auto">
+                    <svg class="w-10 h-10 mx-auto text-gray-400 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
+                    </svg>
+                    <p class="font-medium text-gray-800">No content items found</p>
+                    <p class="text-xs text-gray-400 mt-1">Try adjusting your filters or create a new entry.</p>
+                  </div>
+                </td>
+              </tr>
+
+              <tr th:each="item : ${contents.content}" class="hover:bg-gray-50/50 transition-colors">
+                <!-- Content Thumbnail & Title -->
+                <td class="py-4 px-6">
+                  <div class="flex items-center gap-3">
+                    <div class="w-12 h-12 rounded-lg bg-gray-100 border border-gray-200 flex-shrink-0 overflow-hidden flex items-center justify-center">
+                      <img th:if="${item.imagePath != null}" th:src="${item.imagePath}" class="w-full h-full object-cover" alt="Thumbnail"/>
+                      <svg th:unless="${item.imagePath != null}" class="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                      </svg>
+                    </div>
+                    <div>
+                      <p class="font-semibold text-gray-900 leading-tight" th:text="${item.title}">Article Title</p>
+                      <p class="text-xs text-gray-400 font-mono mt-0.5" th:text="${item.slug}">article-title-slug</p>
+                    </div>
+                  </div>
+                </td>
+
+                <!-- Content Type -->
+                <td class="py-4 px-6">
+                  <span class="px-2.5 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-700" th:text="${item.contentTypeName}">
+                    Announcement
+                  </span>
+                </td>
+
+                <!-- Event Date -->
+                <td class="py-4 px-6 text-gray-600 text-xs" th:text="${item.eventDate != null ? #temporals.format(item.eventDate, 'MMM dd, yyyy') : '—'}">
+                  Oct 12, 2026
+                </td>
+
+                <!-- Publish Status -->
+                <td class="py-4 px-6">
+                  <span th:if="${item.isPublished}" class="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-full bg-emerald-100 text-emerald-800">
+                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Published
+                  </span>
+                  <span th:unless="${item.isPublished}" class="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-full bg-amber-100 text-amber-800">
+                    <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span> Draft
+                  </span>
+                </td>
+
+                <!-- Action Endpoints -->
+                <td class="py-4 px-6 text-right">
+                  <div class="flex items-center justify-end gap-2">
+                    
+                    <!-- Edit -->
+                    <a th:href="@{/admin/contents/{id}/edit(id=${item.id})}" class="p-1.5 text-gray-500 hover:text-[#005E3C] hover:bg-emerald-50 rounded-lg transition-colors" title="Edit">
+                      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                      </svg>
+                    </a>
+
+                    <!-- Toggle Publish Status -->
+                    <form th:if="${item.isPublished}" th:action="@{/admin/contents/{id}/unpublish(id=${item.id})}" method="post" class="inline">
+                      <button type="submit" class="p-1.5 text-gray-500 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-colors" title="Unpublish">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858-5.908a10.025 10.025 0 0110.123 5.937 9.98 9.98 0 01-1.35 2.502M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                        </svg>
+                      </button>
+                    </form>
+
+                    <form th:unless="${item.isPublished}" th:action="@{/admin/contents/{id}/publish(id=${item.id})}" method="post" class="inline">
+                      <button type="submit" class="p-1.5 text-gray-500 hover:text-[#2F9657] hover:bg-emerald-50 rounded-lg transition-colors" title="Publish">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                        </svg>
+                      </button>
+                    </form>
+
+                    <!-- Delete -->
+                    <form th:action="@{/admin/contents/{id}/delete(id=${item.id})}" method="post" class="inline" onsubmit="return confirm('Are you sure you want to delete this content item?');">
+                      <button type="submit" class="p-1.5 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors" title="Delete">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                        </svg>
+                      </button>
+                    </form>
+
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Pagination Bar -->
+        <div th:if="${contents.totalPages > 1}" class="px-6 py-4 border-t border-gray-100 flex items-center justify-between text-sm text-gray-600 bg-gray-50/50">
+          <p>
+            Showing <span class="font-semibold text-gray-800" th:text="${contents.pageNumber * contents.pageSize + 1}">1</span>
+            to <span class="font-semibold text-gray-800" th:text="${#numbers.sequence(1, contents.totalPages).size() == contents.pageNumber + 1 ? contents.totalElements : (contents.pageNumber + 1) * contents.pageSize}">20</span>
+            of <span class="font-semibold text-gray-800" th:text="${contents.totalElements}">50</span> entries
+          </p>
+
+          <div class="flex items-center gap-1">
+            <a th:href="@{/admin/contents(page=${contents.pageNumber - 1}, contentTypeId=${contentTypeId}, isPublished=${isPublished}, search=${search})}"
+               th:classappend="${contents.first} ? 'pointer-events-none opacity-40' : ''"
+               class="px-3 py-1.5 rounded-lg border border-gray-300 bg-white hover:bg-gray-50 font-medium transition-colors">
+              Previous
+            </a>
+            <a th:href="@{/admin/contents(page=${contents.pageNumber + 1}, contentTypeId=${contentTypeId}, isPublished=${isPublished}, search=${search})}"
+               th:classappend="${contents.last} ? 'pointer-events-none opacity-40' : ''"
+               class="px-3 py-1.5 rounded-lg border border-gray-300 bg-white hover:bg-gray-50 font-medium transition-colors">
+              Next
+            </a>
+          </div>
+        </div>
+
+      </div>
+    </main>
+
+    <!-- Footer Fragment -->
+    <div th:replace="~{admin/fragments/footer :: footer}"></div>
+  </div>
+
+</body>
+</html>

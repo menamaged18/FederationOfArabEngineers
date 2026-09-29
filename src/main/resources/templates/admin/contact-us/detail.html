@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inquiry Details - Admin Portal</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #005E3C;
+            --secondary-color: #2F9657;
+        }
+        .btn-primary-custom {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+            color: #fff;
+        }
+        .btn-primary-custom:hover {
+            background-color: #00472d;
+            color: #fff;
+        }
+    </style>
+</head>
+<body class="bg-light">
+
+    <!-- Header -->
+    <div th:replace="~{admin/fragments/header :: header}"></div>
+
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Sidebar -->
+            <div class="col-md-3 col-lg-2 p-0">
+                <div th:replace="~{admin/fragments/sidebar :: sidebar}"></div>
+            </div>
+
+            <!-- Main Content -->
+            <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 py-4">
+                
+                <!-- Navigation back -->
+                <div class="mb-3">
+                    <a th:href="@{/admin/contact-us}" class="text-decoration-none text-secondary">
+                        <i class="fa-solid fa-arrow-left me-1"></i> Back to Inquiries
+                    </a>
+                </div>
+
+                <!-- Page Header -->
+                <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
+                    <h1 class="h2" style="color: var(--primary-color);">Inquiry Details</h1>
+                    <form th:action="@{/admin/contact-us/{id}/delete(id=${message.id})}" method="post"
+                          th:onsubmit="return confirm('Delete this inquiry?');">
+                        <button type="submit" class="btn btn-outline-danger">
+                            <i class="fa-solid fa-trash me-1"></i> Delete
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Alert Messages -->
+                <div th:if="${successMessage}" class="alert alert-success alert-dismissible fade show" role="alert">
+                    <i class="fa-solid fa-circle-check me-2"></i><span th:text="${successMessage}"></span>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+                <div th:if="${errorMessage}" class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <i class="fa-solid fa-circle-exclamation me-2"></i><span th:text="${errorMessage}"></span>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+
+                <div class="row g-4">
+                    <!-- Inquiry Information Card -->
+                    <div class="col-md-8">
+                        <div class="card shadow-sm border-0 mb-4">
+                            <div class="card-header bg-white border-bottom fw-bold" style="color: var(--primary-color);">
+                                Inquiry Content
+                            </div>
+                            <div class="card-body">
+                                <h5 class="card-title mb-3" th:text="${message.subject}">Subject Title</h5>
+                                <div class="p-3 bg-light rounded border mb-3">
+                                    <p class="card-text mb-0" style="white-space: pre-line;" th:text="${message.message}">
+                                        Inquiry message content...
+                                    </p>
+                                </div>
+                                <div class="text-muted small">
+                                    <i class="fa-regular fa-clock me-1"></i> Received on: 
+                                    <span th:text="${#temporals.format(message.createdAt, 'yyyy-MM-dd HH:mm:ss')}"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Sidebar Status & Sender Info -->
+                    <div class="col-md-4">
+                        <!-- Update Status Form -->
+                        <div class="card shadow-sm border-0 mb-4">
+                            <div class="card-header bg-white border-bottom fw-bold">
+                                Update Status
+                            </div>
+                            <div class="card-body">
+                                <form th:action="@{/admin/contact-us/{id}/review(id=${message.id})}" 
+                                      th:object="${reviewForm}" method="post">
+                                    <div class="mb-3">
+                                        <label for="statusSelect" class="form-label">Current Status</label>
+                                        <select id="statusSelect" th:field="*{status}" class="form-select">
+                                            <option th:each="st : ${statuses}" th:value="${st}" th:text="${st}"></option>
+                                        </select>
+                                    </div>
+                                    <button type="submit" class="btn btn-primary-custom w-100">
+                                        <i class="fa-solid fa-check me-1"></i> Save Status
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+
+                        <!-- Sender Meta -->
+                        <div class="card shadow-sm border-0">
+                            <div class="card-header bg-white border-bottom fw-bold">
+                                Sender Details
+                            </div>
+                            <div class="card-body">
+                                <p class="mb-2"><strong>Name:</strong> <span th:text="${message.fullName}"></span></p>
+                                <p class="mb-2"><strong>Email:</strong> <a th:href="'mailto:' + ${message.email}" th:text="${message.email}"></a></p>
+                                <p class="mb-0" th:if="${message.phone}"><strong>Phone:</strong> <span th:text="${message.phone}"></span></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </main>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <div th:replace="~{admin/fragments/footer :: footer}"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

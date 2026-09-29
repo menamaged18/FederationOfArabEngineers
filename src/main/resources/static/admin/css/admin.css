@@ -1,0 +1,19 @@
+:root {
+  --color-primary-dark: #005E3C;
+  --color-primary-green: #2F9657;
+  --color-primary-light: #EBF7F0;
+}
+
+/* Custom scrollbars and theme utilities */
+.bg-brand-dark { background-color: #005E3C; }
+.bg-brand-green { background-color: #2F9657; }
+.bg-brand-light { background-color: #EBF7F0; }
+
+.text-brand-dark { color: #005E3C; }
+.text-brand-green { color: #2F9657; }
+
+.border-brand-dark { border-color: #005E3C; }
+.border-brand-green { border-color: #2F9657; }
+
+.hover\:bg-brand-dark:hover { background-color: #00472d; }
+.hover\:bg-brand-green:hover { background-color: #267946; }

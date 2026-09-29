@@ -1,4 +1,4 @@
-package com.fae.adminportal.domain.file.controller;
+package com.fae.adminportal.domain.file.controller.api;
 
 import com.fae.adminportal.common.dto.ApiResponse;
 import com.fae.adminportal.common.dto.PagedResponse;
@@ -21,24 +21,31 @@ import org.springframework.web.multipart.MultipartFile;
 import java.util.Arrays;
 import java.util.List;
 
+/**
+ * REST API endpoints for file upload, metadata and download.
+ * Base path: /api/v1/files
+ * <p>
+ * Uploads and deletes require {@code ROLE_super_admin}.
+ * Metadata + download are public — the frontend embeds file URLs directly.
+ */
 @RestController
-@RequestMapping("/api/files")
+@RequestMapping("/api/v1/files")
 @RequiredArgsConstructor
 @Tag(name = "Files", description = "File upload, metadata and download")
-public class FileController {
+public class FileApiController {
 
     private final FileStorageService fileStorageService;
 
     /* ---------- Upload ---------- */
 
     @PostMapping(value = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN')")
+    @PreAuthorize("hasAuthority('ROLE_super_admin')")
     public ApiResponse<FileResponse> upload(@RequestParam("file") MultipartFile file) {
         return ApiResponse.ok("File uploaded", fileStorageService.store(file));
     }
 
     @PostMapping(value = "/upload-multiple", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN')")
+    @PreAuthorize("hasAuthority('ROLE_super_admin')")
     public ApiResponse<List<FileResponse>> uploadMultiple(
             @RequestParam("files") MultipartFile[] files) {
         List<FileResponse> result = Arrays.stream(files)
@@ -88,7 +95,7 @@ public class FileController {
     /* ---------- Delete ---------- */
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN')")
+    @PreAuthorize("hasAuthority('ROLE_super_admin')")
     public ApiResponse<Void> delete(@PathVariable Long id) {
         fileStorageService.delete(id);
         return ApiResponse.ok("File deleted", null);
